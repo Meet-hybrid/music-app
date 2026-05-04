@@ -14,7 +14,7 @@ export async function searchTracks(query) {
           limit: 20,
           search: query,
           include: 'musicinfo',
-          audioformat: 'mp32',
+          audioformat: 'mp3', // Request MP3 format
           imagesize: 300,
         }
       }),
@@ -49,7 +49,7 @@ export async function searchByGenre(genre) {
         limit: 20,
         tags: genre,
         include: 'musicinfo',
-        audioformat: 'mp32',
+        audioformat: 'mp3',
         imagesize: 300,
         orderby: 'popularity_total'
       }

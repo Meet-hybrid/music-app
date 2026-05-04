@@ -30,6 +30,7 @@ export default function Search() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [playbackError, setPlaybackError] = useState(null)
   const [activeGenre, setActiveGenre] = useState(null)
   const resultsRef = useRef([])
 
@@ -72,6 +73,7 @@ export default function Search() {
   }
 
   function handlePlay(track) {
+    setPlaybackError(null) // Clear any previous errors
     const current = resultsRef.current
     const idx = current.findIndex(t => t.id === track.id)
     usePlayerStore.setState({
@@ -79,7 +81,13 @@ export default function Search() {
       queue: current,
       queueIndex: idx === -1 ? 0 : idx
     })
-    playTrack(track)
+    try {
+      playTrack(track)
+    } catch (err) {
+      console.error('Playback error:', err)
+      setPlaybackError('Unable to play this track. It may not be supported by your browser.')
+      setTimeout(() => setPlaybackError(null), 5000) // Clear error after 5 seconds
+    }
   }
 
   const isActive = (track) => currentTrack?.id === track.id
@@ -139,6 +147,12 @@ export default function Search() {
       )}
 
       {error && <p style={{ color: '#b3b3b3', marginBottom: '16px' }}>{error}</p>}
+
+      {playbackError && (
+        <div style={{ background: '#ff4444', color: 'white', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>
+          {playbackError}
+        </div>
+      )}
 
       {results.length > 0 && (
         <div>
