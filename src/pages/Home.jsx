@@ -15,8 +15,13 @@ export default function Home() {
   const { currentTrack, isPlaying } = usePlayerStore()
 
   function handlePlay(track) {
+    const idx = recentlyPlayed.findIndex(t => t.id === track.id)
+    usePlayerStore.setState({ 
+        currentTrack: track,
+        queue: recentlyPlayed,
+        queueIndex: idx === -1 ? 0 : idx
+      })
     playTrack(track)
-    usePlayerStore.getState().setTrack(track, recentlyPlayed)
   }
 
   const greeting = () => {

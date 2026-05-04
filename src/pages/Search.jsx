@@ -85,9 +85,14 @@ export default function Search() {
   }
 
   function handlePlay(track) {
+    const idx = results.findIndexck(t => t.id === track.id)
+    usePlayerStore.setState({ 
+        currentTrack: track,
+        queue: results,
+        queueIndex: idx === -1 ? 0 : idx
+      })
     playTrack(track)
-    usePlayerStore.getState().setTrack(track, results)
-  }
+    }
 
   return (
     <div className="p-8">
