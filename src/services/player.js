@@ -13,7 +13,7 @@ export function playTrack(track) {
   }
 
   sound = new Howl({
-    src: [track.streamUrl],
+    src: (track.oggUrl && track.oggUrl !== track.streamUrl ? [track.oggUrl, track.streamUrl] : [track.streamUrl]).filter(Boolean),
     html5: true,
     volume: store.volume,
     onplay: () => {
@@ -29,11 +29,15 @@ export function playTrack(track) {
     onend: () => {
       usePlayerStore.setState({ isPlaying: false, progress: 0 })
       const { queue, queueIndex } = usePlayerStore.getState()
+      console.log('Song ended. Queue length:', queue.length, 'Current index:', queueIndex)
       const nextIdx = queueIndex + 1
       if (nextIdx < queue.length) {
         const nextTrack = queue[nextIdx]
+        console.log('Playing next:', nextTrack.title)
         usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
         playTrack(nextTrack)
+      } else {
+        console.log('No next track available')
       }
     },
     onload: () => {

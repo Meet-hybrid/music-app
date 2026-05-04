@@ -27,12 +27,14 @@ export async function searchTracks(query) {
       artist: t.artist_name,
       album: t.album_name || '',
       artwork: t.image,
+      mp3Url: t.audio,
+      oggUrl: t.audio ? t.audio.replace(/mp3\\.jamendo\\.com/i, 'ogg.jamendo.com') : null,
       streamUrl: t.audio,
       duration: t.duration,
       source: 'jamendo'
     }))
 
-    return [...jamendoTracks, ...audiusRes]
+    return jamendoTracks
   } catch (err) {
     return []
   }
@@ -58,6 +60,8 @@ export async function searchByGenre(genre) {
       artist: t.artist_name,
       album: t.album_name || '',
       artwork: t.image,
+      mp3Url: t.audio,
+      oggUrl: t.audio ? t.audio.replace(/mp3\\.jamendo\\.com/i, 'ogg.jamendo.com') : null,
       streamUrl: t.audio,
       duration: t.duration,
       source: 'jamendo'
