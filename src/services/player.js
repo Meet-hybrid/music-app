@@ -1,12 +1,12 @@
 import { Howl } from 'howler'
 import { usePlayerStore } from '../store/playerStore'
+import { useLibraryStore } from '../store/libraryStore'
 
 let sound = null
 
 export function playTrack(track) {
   const store = usePlayerStore.getState()
 
-  // Stop and unload previous sound
   if (sound) {
     sound.stop()
     sound.unload()
@@ -20,19 +20,39 @@ export function playTrack(track) {
       usePlayerStore.setState({ isPlaying: true })
       requestAnimationFrame(updateProgress)
     },
-    onpause: () => usePlayerStore.setState({ isPlaying: false }),
-    onstop: () => usePlayerStore.setState({ isPlaying: false, progress: 0 }),
+    onpause: () => {
+      usePlayerStore.setState({ isPlaying: false })
+    },
+    onstop: () => {
+      usePlayerStore.setState({ isPlaying: false, progress: 0 })
+    },
     onend: () => {
       usePlayerStore.setState({ isPlaying: false, progress: 0 })
-      store.playNext()
+      const { queue, queueIndex } = usePlayerStore.getState()
+      const nextIdx = queueIndex + 1
+      if (nextIdx < queue.length) {
+        const nextTrack = queue[nextIdx]
+        usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
+        playTrack(nextTrack)
+      }
     },
     onload: () => {
       usePlayerStore.setState({ duration: sound.duration() })
     },
+    onloaderror: (id, err) => {
+      console.error('Load error:', err)
+      const { queue, queueIndex } = usePlayerStore.getState()
+      const nextIdx = queueIndex + 1
+      if (nextIdx < queue.length) {
+        const nextTrack = queue[nextIdx]
+        usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
+        playTrack(nextTrack)
+      }
+    }
   })
 
   sound.play()
-  store.addToRecentlyPlayed?.(track)
+  useLibraryStore.getState().addToRecentlyPlayed(track)
 }
 
 export function togglePlay() {

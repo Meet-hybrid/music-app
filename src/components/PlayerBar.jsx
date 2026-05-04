@@ -1,6 +1,6 @@
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
-import { togglePlay, seekTo, setVolume } from '../services/player'
+import { togglePlay, seekTo, setVolume, playTrack } from '../services/player'
 
 function formatTime(s) {
   if (!s || isNaN(s)) return '0:00'
@@ -10,7 +10,7 @@ function formatTime(s) {
 }
 
 export default function PlayerBar() {
-  const { currentTrack, isPlaying, progress, duration, volume, playNext, playPrev, setVolume: storeSetVolume } = usePlayerStore()
+  const { currentTrack, isPlaying, progress, duration, volume, queue, queueIndex, setVolume: storeSetVolume } = usePlayerStore()
 
   function handleSeek(e) {
     const val = parseFloat(e.target.value)
@@ -22,6 +22,29 @@ export default function PlayerBar() {
     const val = parseFloat(e.target.value)
     storeSetVolume(val)
     setVolume(val)
+  }
+
+  function handleNext() {
+    const nextIdx = queueIndex + 1
+    if (nextIdx < queue.length) {
+      const nextTrack = queue[nextIdx]
+      usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
+      playTrack(nextTrack)
+    }
+  }
+
+  function handlePrev() {
+    if (progress > 3) {
+      seekTo(0)
+      usePlayerStore.setState({ progress: 0 })
+      return
+    }
+    const prevIdx = queueIndex - 1
+    if (prevIdx >= 0) {
+      const prevTrack = queue[prevIdx]
+      usePlayerStore.setState({ currentTrack: prevTrack, queueIndex: prevIdx })
+      playTrack(prevTrack)
+    }
   }
 
   return (
@@ -47,8 +70,9 @@ export default function PlayerBar() {
       <div className="flex-1 flex flex-col items-center gap-2">
         <div className="flex items-center gap-6">
           <button
-            onClick={playPrev}
-            className="text-[#b3b3b3] hover:text-white transition-colors"
+            onClick={handlePrev}
+            className="text-[#b3b3b3] hover:text-white transition-colors disabled:opacity-30"
+            disabled={queueIndex === 0 && progress <= 3}
           >
             <SkipBack size={20} />
           </button>
@@ -62,8 +86,9 @@ export default function PlayerBar() {
             }
           </button>
           <button
-            onClick={playNext}
-            className="text-[#b3b3b3] hover:text-white transition-colors"
+            onClick={handleNext}
+            className="text-[#b3b3b3] hover:text-white transition-colors disabled:opacity-30"
+            disabled={queueIndex >= queue.length - 1}
           >
             <SkipForward size={20} />
           </button>
