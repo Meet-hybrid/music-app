@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Search as SearchIcon, Heart } from 'lucide-react'
+import { Search as SearchIcon, Heart, ListPlus, Plus } from 'lucide-react'
 import { searchTracks, searchByGenre } from '../services/jamendo'
 import { playTrack } from '../services/player'
 import { usePlayerStore } from '../store/playerStore'
@@ -29,7 +29,28 @@ export default function Search() {
   const resultsRef = useRef([])
 
   const { currentTrack, isPlaying } = usePlayerStore()
-  const { toggleFavorite, isFavorite } = useLibraryStore()
+  const { toggleFavorite, isFavorite, playlists, addToPlaylist, createPlaylist } = useLibraryStore()
+  const [menuFor, setMenuFor] = useState(null)
+  const [newName, setNewName] = useState('')
+
+  function openMenu(id) {
+    setMenuFor(menuFor === id ? null : id)
+    setNewName('')
+  }
+
+  function handleAddToPlaylist(playlistId, track) {
+    addToPlaylist(playlistId, track)
+    setMenuFor(null)
+  }
+
+  function handleCreateAndAdd(track) {
+    const name = newName.trim()
+    if (!name) return
+    const playlist = createPlaylist(name)
+    addToPlaylist(playlist.id, track)
+    setMenuFor(null)
+    setNewName('')
+  }
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -162,11 +183,12 @@ export default function Search() {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 60px', gap: '16px', padding: '8px 16px', borderBottom: '1px solid #282828', marginBottom: '8px', fontSize: '11px', color: '#b3b3b3', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 36px 60px', gap: '16px', padding: '8px 16px', borderBottom: '1px solid #282828', marginBottom: '8px', fontSize: '11px', color: '#b3b3b3', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             <span>#</span>
             <span>Title</span>
             <span>Album</span>
             <span>♡</span>
+            <span></span>
             <span>Time</span>
           </div>
 
@@ -174,7 +196,7 @@ export default function Search() {
             <div
               key={track.id}
               onClick={() => handlePlay(track)}
-              style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 60px', gap: '16px', padding: '10px 16px', borderRadius: '6px', alignItems: 'center', cursor: 'pointer', background: isActive(track) ? '#282828' : 'transparent' }}
+              style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 36px 60px', gap: '16px', padding: '10px 16px', borderRadius: '6px', alignItems: 'center', cursor: 'pointer', background: isActive(track) ? '#282828' : 'transparent' }}
               onMouseEnter={e => { if (!isActive(track)) e.currentTarget.style.background = '#1a1a1a' }}
               onMouseLeave={e => { if (!isActive(track)) e.currentTarget.style.background = 'transparent' }}
             >
@@ -210,6 +232,55 @@ export default function Search() {
               >
                 <Heart size={15} fill={isFavorite(track.id) ? 'currentColor' : 'none'} />
               </button>
+
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={e => { e.stopPropagation(); openMenu(track.id) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: menuFor === track.id ? '#1db954' : '#b3b3b3', padding: 0 }}
+                  title="Add to playlist"
+                >
+                  <ListPlus size={15} />
+                </button>
+
+                {menuFor === track.id && (
+                  <div
+                    onClick={e => e.stopPropagation()}
+                    style={{ position: 'absolute', top: '28px', right: 0, zIndex: 10, background: '#282828', border: '1px solid #383838', borderRadius: '8px', padding: '8px', width: '200px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}
+                  >
+                    {playlists.length === 0 && (
+                      <p style={{ color: '#b3b3b3', fontSize: '12px', margin: '0 0 8px' }}>No playlists yet.</p>
+                    )}
+                    {playlists.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => handleAddToPlaylist(p.id, track)}
+                        style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: 'white', fontSize: '13px', padding: '6px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#383838'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {p.name}
+                      </button>
+                    ))}
+                    <form
+                      onSubmit={e => { e.preventDefault(); handleCreateAndAdd(track) }}
+                      style={{ display: 'flex', gap: '4px', marginTop: '8px', borderTop: '1px solid #383838', paddingTop: '8px' }}
+                    >
+                      <input
+                        value={newName}
+                        onChange={e => setNewName(e.target.value)}
+                        placeholder="New playlist"
+                        style={{ flex: 1, minWidth: 0, background: '#1a1a1a', border: '1px solid #383838', borderRadius: '4px', color: 'white', fontSize: '12px', padding: '4px 6px', outline: 'none' }}
+                      />
+                      <button
+                        type="submit"
+                        style={{ background: '#1db954', border: 'none', borderRadius: '4px', color: 'black', cursor: 'pointer', padding: '4px 6px' }}
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
 
               <span style={{ fontSize: '13px', color: '#b3b3b3' }}>{formatTime(track.duration)}</span>
             </div>
