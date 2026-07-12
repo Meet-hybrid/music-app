@@ -4,12 +4,6 @@ import { useLibraryStore } from '../store/libraryStore'
 
 let sound = null
 
-// Check if browser supports audio formats
-function canPlayAudioType(type) {
-  const audio = document.createElement('audio')
-  return !!(audio.canPlayType && audio.canPlayType(type).replace(/no/, ''))
-}
-
 export function playTrack(track) {
   const store = usePlayerStore.getState()
 
