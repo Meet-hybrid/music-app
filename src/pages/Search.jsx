@@ -26,31 +26,12 @@ export default function Search() {
   const [error, setError] = useState(null)
   const [playbackError, setPlaybackError] = useState(null)
   const [activeGenre, setActiveGenre] = useState(null)
+  const [menuFor, setMenuFor] = useState(null)
+  const [newName, setNewName] = useState('')
   const resultsRef = useRef([])
 
   const { currentTrack, isPlaying } = usePlayerStore()
   const { toggleFavorite, isFavorite, playlists, addToPlaylist, createPlaylist } = useLibraryStore()
-  const [menuFor, setMenuFor] = useState(null)
-  const [newName, setNewName] = useState('')
-
-  function openMenu(id) {
-    setMenuFor(menuFor === id ? null : id)
-    setNewName('')
-  }
-
-  function handleAddToPlaylist(playlistId, track) {
-    addToPlaylist(playlistId, track)
-    setMenuFor(null)
-  }
-
-  function handleCreateAndAdd(track) {
-    const name = newName.trim()
-    if (!name) return
-    const playlist = createPlaylist(name)
-    addToPlaylist(playlist.id, track)
-    setMenuFor(null)
-    setNewName('')
-  }
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -88,7 +69,7 @@ export default function Search() {
   }
 
   function handlePlay(track) {
-    setPlaybackError(null) // Clear any previous errors
+    setPlaybackError(null)
     const current = resultsRef.current
     const idx = current.findIndex(t => t.id === track.id)
     usePlayerStore.setState({
@@ -101,40 +82,58 @@ export default function Search() {
     } catch (err) {
       console.error('Playback error:', err)
       setPlaybackError('Unable to play this track. It may not be supported by your browser.')
-      setTimeout(() => setPlaybackError(null), 5000) // Clear error after 5 seconds
+      setTimeout(() => setPlaybackError(null), 5000)
     }
+  }
+
+  function openMenu(id) {
+    setMenuFor(menuFor === id ? null : id)
+    setNewName('')
+  }
+
+  function handleAddToPlaylist(playlistId, track) {
+    addToPlaylist(playlistId, track)
+    setMenuFor(null)
+  }
+
+  function handleCreateAndAdd(track) {
+    const name = newName.trim()
+    if (!name) return
+    const playlist = createPlaylist(name)
+    addToPlaylist(playlist.id, track)
+    setMenuFor(null)
+    setNewName('')
   }
 
   const isActive = (track) => currentTrack?.id === track.id
   const isCurrentlyPlaying = (track) => isActive(track) && isPlaying
 
   return (
-    <div style={{ padding: '32px', color: 'white' }}>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+    <div className="p-8 text-white">
+      <div className="flex items-center gap-4 mb-6">
         <button
           onClick={() => window.history.back()}
-          style={{ background: '#282828', border: 'none', color: 'white', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px' }}
+          className="w-8 h-8 rounded-full bg-[#282828] text-white cursor-pointer text-lg hover:bg-[#383838]"
         >
           &#8592;
         </button>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Search</h1>
+        <h1 className="text-2xl font-bold">Search</h1>
       </div>
 
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px', marginBottom: '32px', maxWidth: '500px' }}>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', background: '#242424', borderRadius: '24px', padding: '0 16px', gap: '8px' }}>
-          <SearchIcon size={16} color="#b3b3b3" />
+      <form onSubmit={handleSearch} className="flex gap-3 mb-8 max-w-xl">
+        <div className="flex flex-1 items-center bg-[#242424] rounded-full px-4 gap-2">
+          <SearchIcon size={16} className="text-[#b3b3b3]" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', padding: '8px 0', fontSize: '14px', outline: 'none' }}
+            className="flex-1 bg-transparent border-none text-white py-2 text-sm outline-none placeholder:text-[#b3b3b3]"
             placeholder="Artists, songs, albums..."
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          style={{ background: 'white', color: 'black', border: 'none', borderRadius: '24px', padding: '8px 20px', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}
+          className="bg-white text-black rounded-full px-5 py-2 font-bold text-sm cursor-pointer hover:scale-105 transition-transform disabled:opacity-60"
         >
           {loading ? '...' : 'Search'}
         </button>
@@ -142,13 +141,14 @@ export default function Search() {
 
       {results.length === 0 && !loading && !error && (
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '16px' }}>Browse by Genre</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', maxWidth: '600px' }}>
+          <h2 className="text-lg font-bold mb-4">Browse by Genre</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-w-3xl">
             {GENRES.map(genre => (
               <button
                 key={genre.value}
                 onClick={() => handleGenre(genre)}
-                style={{ background: genre.color, border: 'none', borderRadius: '8px', padding: '20px 12px', color: 'white', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', textAlign: 'left' }}
+                style={{ background: genre.color }}
+                className="border-none rounded-lg py-5 px-3 text-white font-bold text-sm cursor-pointer text-left hover:opacity-90"
               >
                 {genre.label}
               </button>
@@ -157,37 +157,35 @@ export default function Search() {
         </div>
       )}
 
-      {loading && (
-        <p style={{ color: '#b3b3b3', marginTop: '32px' }}>Searching...</p>
-      )}
+      {loading && <p className="text-[#b3b3b3] mt-8">Searching...</p>}
 
-      {error && <p style={{ color: '#b3b3b3', marginBottom: '16px' }}>{error}</p>}
+      {error && <p className="text-[#b3b3b3] mb-4">{error}</p>}
 
       {playbackError && (
-        <div style={{ background: '#ff4444', color: 'white', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>
+        <div className="bg-[#ff4444] text-white p-3 rounded-md mb-4">
           {playbackError}
         </div>
       )}
 
       {results.length > 0 && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">
               {activeGenre ? activeGenre.toUpperCase() : 'Results'} — {results.length} songs
             </h2>
             <button
               onClick={() => { setResults([]); setActiveGenre(null); resultsRef.current = [] }}
-              style={{ background: 'none', border: 'none', color: '#b3b3b3', cursor: 'pointer', fontSize: '13px' }}
+              className="bg-none border-none text-[#b3b3b3] cursor-pointer text-sm hover:text-white"
             >
               Clear
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 36px 60px', gap: '16px', padding: '8px 16px', borderBottom: '1px solid #282828', marginBottom: '8px', fontSize: '11px', color: '#b3b3b3', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <div className="grid grid-cols-[40px_1fr_1fr_30px_36px_60px] gap-4 px-4 py-2 border-b border-[#282828] mb-2 text-[11px] text-[#b3b3b3] uppercase tracking-wider">
             <span>#</span>
             <span>Title</span>
             <span>Album</span>
-            <span>♡</span>
+            <span>&#9825;</span>
             <span></span>
             <span>Time</span>
           </div>
@@ -196,47 +194,41 @@ export default function Search() {
             <div
               key={track.id}
               onClick={() => handlePlay(track)}
-              style={{ display: 'grid', gridTemplateColumns: '40px 1fr 1fr 30px 36px 60px', gap: '16px', padding: '10px 16px', borderRadius: '6px', alignItems: 'center', cursor: 'pointer', background: isActive(track) ? '#282828' : 'transparent' }}
-              onMouseEnter={e => { if (!isActive(track)) e.currentTarget.style.background = '#1a1a1a' }}
-              onMouseLeave={e => { if (!isActive(track)) e.currentTarget.style.background = 'transparent' }}
+              className={`grid grid-cols-[40px_1fr_1fr_30px_36px_60px] gap-4 px-4 py-2.5 rounded-md items-center cursor-pointer ${isActive(track) ? 'bg-[#282828]' : 'hover:bg-[#1a1a1a]'}`}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="flex items-center justify-center">
                 {isCurrentlyPlaying(track)
-                  ? <span style={{ color: '#1db954', fontSize: '12px' }}>▶</span>
-                  : <span style={{ color: '#b3b3b3', fontSize: '13px' }}>{i + 1}</span>
+                  ? <span className="text-green-400 text-xs">&#9654;</span>
+                  : <span className="text-[#b3b3b3] text-sm">{i + 1}</span>
                 }
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+              <div className="flex items-center gap-3 min-w-0">
                 {track.artwork
-                  ? <img src={track.artwork} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
-                  : <div style={{ width: '40px', height: '40px', borderRadius: '4px', background: '#282828', flexShrink: 0 }} />
+                  ? <img src={track.artwork} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
+                  : <div className="w-10 h-10 rounded bg-[#282828] shrink-0" />
                 }
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: isActive(track) ? '#1db954' : 'white' }}>
+                <div className="min-w-0">
+                  <p className={`text-sm font-medium truncate ${isActive(track) ? 'text-green-400' : 'text-white'}`}>
                     {track.title}
                   </p>
-                  <p style={{ fontSize: '11px', color: '#b3b3b3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {track.artist}
-                  </p>
+                  <p className="text-xs text-[#b3b3b3] truncate">{track.artist}</p>
                 </div>
               </div>
 
-              <p style={{ fontSize: '13px', color: '#b3b3b3', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {track.album || '—'}
-              </p>
+              <p className="text-sm text-[#b3b3b3] truncate">{track.album || '—'}</p>
 
               <button
                 onClick={e => { e.stopPropagation(); toggleFavorite(track) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: isFavorite(track.id) ? '#1db954' : '#b3b3b3', padding: 0 }}
+                className={`bg-none border-none cursor-pointer p-0 ${isFavorite(track.id) ? 'text-green-400' : 'text-[#b3b3b3]'}`}
               >
                 <Heart size={15} fill={isFavorite(track.id) ? 'currentColor' : 'none'} />
               </button>
 
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <button
                   onClick={e => { e.stopPropagation(); openMenu(track.id) }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: menuFor === track.id ? '#1db954' : '#b3b3b3', padding: 0 }}
+                  className={`bg-none border-none cursor-pointer p-0 ${menuFor === track.id ? 'text-green-400' : 'text-[#b3b3b3]'}`}
                   title="Add to playlist"
                 >
                   <ListPlus size={15} />
@@ -245,35 +237,33 @@ export default function Search() {
                 {menuFor === track.id && (
                   <div
                     onClick={e => e.stopPropagation()}
-                    style={{ position: 'absolute', top: '28px', right: 0, zIndex: 10, background: '#282828', border: '1px solid #383838', borderRadius: '8px', padding: '8px', width: '200px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}
+                    className="absolute top-7 right-0 z-10 bg-[#282828] border border-[#383838] rounded-lg p-2 w-52 shadow-xl"
                   >
                     {playlists.length === 0 && (
-                      <p style={{ color: '#b3b3b3', fontSize: '12px', margin: '0 0 8px' }}>No playlists yet.</p>
+                      <p className="text-[#b3b3b3] text-xs mb-2">No playlists yet.</p>
                     )}
                     {playlists.map(p => (
                       <button
                         key={p.id}
                         onClick={() => handleAddToPlaylist(p.id, track)}
-                        style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: 'white', fontSize: '13px', padding: '6px 8px', borderRadius: '4px', cursor: 'pointer' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#383838'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        className="block w-full text-left bg-none border-none text-white text-sm py-1.5 px-2 rounded hover:bg-[#383838]"
                       >
                         {p.name}
                       </button>
                     ))}
                     <form
                       onSubmit={e => { e.preventDefault(); handleCreateAndAdd(track) }}
-                      style={{ display: 'flex', gap: '4px', marginTop: '8px', borderTop: '1px solid #383838', paddingTop: '8px' }}
+                      className="flex gap-1 mt-2 border-t border-[#383838] pt-2"
                     >
                       <input
                         value={newName}
                         onChange={e => setNewName(e.target.value)}
                         placeholder="New playlist"
-                        style={{ flex: 1, minWidth: 0, background: '#1a1a1a', border: '1px solid #383838', borderRadius: '4px', color: 'white', fontSize: '12px', padding: '4px 6px', outline: 'none' }}
+                        className="flex-1 min-w-0 bg-[#1a1a1a] border border-[#383838] rounded text-white text-xs py-1 px-2 outline-none"
                       />
                       <button
                         type="submit"
-                        style={{ background: '#1db954', border: 'none', borderRadius: '4px', color: 'black', cursor: 'pointer', padding: '4px 6px' }}
+                        className="bg-green-400 border-none rounded text-black cursor-pointer py-1 px-2"
                       >
                         <Plus size={14} />
                       </button>
@@ -282,7 +272,7 @@ export default function Search() {
                 )}
               </div>
 
-              <span style={{ fontSize: '13px', color: '#b3b3b3' }}>{formatTime(track.duration)}</span>
+              <span className="text-sm text-[#b3b3b3]">{formatTime(track.duration)}</span>
             </div>
           ))}
         </div>
