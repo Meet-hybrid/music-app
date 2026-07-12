@@ -61,3 +61,16 @@ export async function searchByGenre(genre) {
   ])
   return [...jamendoTracks, ...audiusTracks]
 }
+
+export async function getPopularTracks(limit = 20) {
+  const tracks = await fetchJamendo({
+    client_id: KEY,
+    format: 'json',
+    limit,
+    include: 'musicinfo',
+    audioformat: 'mp3',
+    imagesize: 300,
+    orderby: 'popularity_total',
+  })
+  return tracks
+}

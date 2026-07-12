@@ -1,12 +1,23 @@
+import { useEffect, useState } from 'react'
 import { useLibraryStore } from '../store/libraryStore'
 import { usePlayerStore } from '../store/playerStore'
 import { playTrack } from '../services/player'
+import { getPopularTracks } from '../services/jamendo'
 import { formatTime } from '../utils/format'
-import { Play, Clock } from 'lucide-react'
+import { Play, Clock, Music2 } from 'lucide-react'
 
 export default function Home() {
   const { recentlyPlayed } = useLibraryStore()
   const { currentTrack, isPlaying } = usePlayerStore()
+  const [popular, setPopular] = useState([])
+
+  useEffect(() => {
+    let active = true
+    getPopularTracks().then(tracks => {
+      if (active) setPopular(tracks)
+    })
+    return () => { active = false }
+  }, [])
 
   function handlePlay(track) {
     const idx = recentlyPlayed.findIndex(t => t.id === track.id)
@@ -15,6 +26,12 @@ export default function Home() {
         queue: recentlyPlayed,
         queueIndex: idx === -1 ? 0 : idx
       })
+    playTrack(track)
+  }
+
+  function handlePlayPopular(track) {
+    const idx = popular.findIndex(t => t.id === track.id)
+    usePlayerStore.setState({ currentTrack: track, queue: popular, queueIndex: idx === -1 ? 0 : idx })
     playTrack(track)
   }
 
@@ -83,6 +100,40 @@ export default function Home() {
             })}
           </div>
         </>
+      )}
+
+      {popular.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-bold mb-4">Popular Right Now</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {popular.slice(0, 10).map(track => {
+              const active = currentTrack?.id === track.id
+              const playing = active && isPlaying
+              return (
+                <div
+                  key={track.id}
+                  onClick={() => handlePlayPopular(track)}
+                  className="bg-[#181818] hover:bg-[#282828] rounded-md p-4 transition-colors group relative cursor-pointer"
+                >
+                  {track.artwork
+                    ? <img src={track.artwork} alt="" className="w-full aspect-square rounded object-cover mb-3 shadow-lg" />
+                    : <div className="w-full aspect-square rounded bg-[#282828] mb-3 flex items-center justify-center"><Music2 size={32} className="text-[#b3b3b3]" /></div>
+                  }
+                  <p className={`text-sm font-medium truncate ${playing ? 'text-green-400' : 'text-white'}`}>
+                    {track.title}
+                  </p>
+                  <p className="text-xs text-[#b3b3b3] truncate">{track.artist}</p>
+                  <button
+                    onClick={e => { e.stopPropagation(); handlePlayPopular(track) }}
+                    className={`absolute bottom-16 right-6 w-10 h-10 bg-green-400 rounded-full flex items-center justify-center shadow-lg transition-opacity ${playing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                  >
+                    <Play size={16} className="text-black ml-0.5" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       )}
     </div>
   )
