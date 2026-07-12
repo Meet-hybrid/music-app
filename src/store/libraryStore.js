@@ -1,9 +1,22 @@
 import { create } from 'zustand'
 
+const STORAGE_KEY = 'musicbox-library'
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+const saved = loadState()
+
 export const useLibraryStore = create((set, get) => ({
-  favorites: [],
-  recentlyPlayed: [],
-  playlists: [],
+  favorites: saved.favorites ?? [],
+  recentlyPlayed: saved.recentlyPlayed ?? [],
+  playlists: saved.playlists ?? [],
 
   toggleFavorite: (track) => {
     const { favorites } = get()
@@ -56,3 +69,15 @@ export const useLibraryStore = create((set, get) => ({
     }))
   },
 }))
+
+useLibraryStore.subscribe((state) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      favorites: state.favorites,
+      recentlyPlayed: state.recentlyPlayed,
+      playlists: state.playlists,
+    }))
+  } catch {
+    // ignore quota / serialization errors
+  }
+})
