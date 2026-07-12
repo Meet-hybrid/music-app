@@ -4,6 +4,7 @@ import { searchTracks, searchByGenre } from '../services/jamendo'
 import { playTrack } from '../services/player'
 import { usePlayerStore } from '../store/playerStore'
 import { useLibraryStore } from '../store/libraryStore'
+import { formatTime } from '../utils/format'
 
 const GENRES = [
   { label: 'Hip Hop', value: 'hiphop', color: '#e67e22' },
@@ -17,13 +18,6 @@ const GENRES = [
   { label: 'R&B', value: 'rnb', color: '#3949ab' },
   { label: 'Reggae', value: 'reggae', color: '#558b2f' },
 ]
-
-function formatTime(s) {
-  if (!s || isNaN(s)) return '0:00'
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
-}
 
 export default function Search() {
   const [query, setQuery] = useState('')

@@ -1,14 +1,8 @@
 import { useLibraryStore } from '../store/libraryStore'
 import { usePlayerStore } from '../store/playerStore'
 import { playTrack } from '../services/player'
+import { formatTime } from '../utils/format'
 import { Play, Clock } from 'lucide-react'
-
-function formatTime(s) {
-  if (!s || isNaN(s)) return '0:00'
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
-}
 
 export default function Home() {
   const { recentlyPlayed } = useLibraryStore()

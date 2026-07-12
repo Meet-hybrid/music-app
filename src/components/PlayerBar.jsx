@@ -1,13 +1,7 @@
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
 import { togglePlay, seekTo, setVolume, playTrack } from '../services/player'
-
-function formatTime(s) {
-  if (!s || isNaN(s)) return '0:00'
-  const m = Math.floor(s / 60)
-  const sec = Math.floor(s % 60)
-  return `${m}:${sec.toString().padStart(2, '0')}`
-}
+import { formatTime } from '../utils/format'
 
 export default function PlayerBar() {
   const { currentTrack, isPlaying, progress, duration, volume, queue, queueIndex, setVolume: storeSetVolume } = usePlayerStore()
