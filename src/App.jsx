@@ -4,8 +4,11 @@ import PlayerBar from './components/PlayerBar'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import Library from './pages/Library'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
 export default function App() {
+  useKeyboardShortcuts()
+
   return (
     <div className="flex flex-col h-screen bg-[#121212] text-white">
       <div className="flex flex-1 overflow-hidden">
