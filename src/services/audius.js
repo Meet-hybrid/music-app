@@ -17,7 +17,7 @@ export async function searchAudius(query) {
       duration: t.duration,
       source: 'audius'
     }))
-  } catch (err) {
+  } catch {
     return []
   }
 }

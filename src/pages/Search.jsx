@@ -48,7 +48,7 @@ export default function Search() {
       setResults(tracks)
       resultsRef.current = tracks
       if (tracks.length === 0) setError('No results found.')
-    } catch (err) {
+    } catch {
       setError('Something went wrong.')
     } finally {
       setLoading(false)
@@ -65,7 +65,7 @@ export default function Search() {
       setResults(tracks)
       resultsRef.current = tracks
       if (tracks.length === 0) setError('No results for this genre.')
-    } catch (err) {
+    } catch {
       setError('Something went wrong.')
     } finally {
       setLoading(false)
