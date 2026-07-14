@@ -1,6 +1,7 @@
 import { Howl } from 'howler'
 import { usePlayerStore } from '../store/playerStore'
 import { useLibraryStore } from '../store/libraryStore'
+import { logger } from '../utils/logger'
 
 let sound = null
 
@@ -12,31 +13,29 @@ export function playTrack(track) {
     sound.unload()
   }
 
-  // Build src array with available formats, prioritizing common browser-supported formats
   const srcArray = []
   if (track.oggUrl && track.oggUrl !== track.streamUrl) {
-    srcArray.push(track.oggUrl) // OGG is well supported
+    srcArray.push(track.oggUrl)
   }
   if (track.mp3Url) {
-    srcArray.push(track.mp3Url) // MP3 is widely supported
+    srcArray.push(track.mp3Url)
   }
   if (track.streamUrl) {
-    srcArray.push(track.streamUrl) // Fallback
+    srcArray.push(track.streamUrl)
   }
 
-  // If no sources, skip
   if (srcArray.length === 0) {
-    console.error('No audio sources available for track:', track.title)
+    logger.error('No audio sources available for track:', track.title)
     return
   }
 
-  console.log('Playing track:', track.title, 'with sources:', srcArray)
+  logger.log('Playing track:', track.title, 'with sources:', srcArray)
 
   sound = new Howl({
     src: srcArray,
-    html5: false, // Use Web Audio API instead of HTML5 Audio for better codec support
+    html5: false,
     volume: store.volume,
-    format: ['mp3', 'ogg', 'aac', 'wav'], // Explicitly specify supported formats
+    format: ['mp3', 'ogg', 'aac', 'wav'],
     onplay: () => {
       usePlayerStore.setState({ isPlaying: true })
       requestAnimationFrame(updateProgress)
@@ -50,34 +49,33 @@ export function playTrack(track) {
     onend: () => {
       usePlayerStore.setState({ isPlaying: false, progress: 0 })
       const { queue, queueIndex } = usePlayerStore.getState()
-      console.log('Song ended. Queue length:', queue.length, 'Current index:', queueIndex)
+      logger.log('Song ended. Queue length:', queue.length, 'Current index:', queueIndex)
       const nextIdx = queueIndex + 1
       if (nextIdx < queue.length) {
         const nextTrack = queue[nextIdx]
-        console.log('Playing next:', nextTrack.title)
+        logger.log('Playing next:', nextTrack.title)
         usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
         playTrack(nextTrack)
       } else {
-        console.log('No next track available')
+        logger.log('No next track available')
       }
     },
     onload: () => {
-      console.log('Successfully loaded track:', track.title)
+      logger.log('Successfully loaded track:', track.title)
       usePlayerStore.setState({ duration: sound.duration() })
     },
     onloaderror: (id, err) => {
-      console.error('Load error:', err)
-      console.error('Failed to load track:', track.title, 'URLs tried:', srcArray)
-      // Try to skip to next track on error
+      logger.error('Load error:', err)
+      logger.error('Failed to load track:', track.title, 'URLs tried:', srcArray)
       const { queue, queueIndex } = usePlayerStore.getState()
       const nextIdx = queueIndex + 1
       if (nextIdx < queue.length) {
         const nextTrack = queue[nextIdx]
-        console.log('Skipping to next track due to load error:', nextTrack.title)
+        logger.log('Skipping to next track due to load error:', nextTrack.title)
         usePlayerStore.setState({ currentTrack: nextTrack, queueIndex: nextIdx })
         playTrack(nextTrack)
       } else {
-        console.log('No more tracks to play after load error')
+        logger.log('No more tracks to play after load error')
         usePlayerStore.setState({ isPlaying: false })
       }
     }

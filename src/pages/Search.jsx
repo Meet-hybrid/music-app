@@ -5,6 +5,7 @@ import { playTrack } from '../services/player'
 import { usePlayerStore } from '../store/playerStore'
 import { useLibraryStore } from '../store/libraryStore'
 import { formatTime } from '../utils/format'
+import { logger } from '../utils/logger'
 
 const GENRES = [
   { label: 'Hip Hop', value: 'hiphop', color: '#e67e22' },
@@ -80,7 +81,7 @@ export default function Search() {
     try {
       playTrack(track)
     } catch (err) {
-      console.error('Playback error:', err)
+      logger.error('Playback error:', err)
       setPlaybackError('Unable to play this track. It may not be supported by your browser.')
       setTimeout(() => setPlaybackError(null), 5000)
     }
